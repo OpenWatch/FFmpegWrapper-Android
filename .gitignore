@@ -1,6 +1,9 @@
 # FFmpeg shared libraries
 FFmpegWrapper/libs/armeabi
 
+# Result of ndk-build.sh
+FFmpegWrapper/libs/armeabi.jar
+
 local.properties
 *.iml
 gen
