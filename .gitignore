@@ -1,0 +1,13 @@
+# FFmpeg shared libraries
+FFmpegWrapper/libs/armeabi
+
+local.properties
+*.iml
+gen
+.gradle/
+lint.xml
+.DS_STORE
+.idea/
+build
+*.class
+obj
