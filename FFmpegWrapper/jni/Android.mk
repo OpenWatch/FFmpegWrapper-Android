@@ -50,11 +50,11 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_LDLIBS += -llog -lz
-LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
+#LOCAL_LDLIBS += -llog -lz
+#LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil
+#LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
 LOCAL_SRC_FILES := FFmpegWrapper.c
-LOCAL_CFLAGS := -march=armv7-a -mfloat-abi=softfp -mfpu=neon
+#LOCAL_CFLAGS := -march=armv7-a -mfloat-abi=softfp -mfpu=neon
 LOCAL_MODULE := FFmpegWrapper
 
 include $(BUILD_SHARED_LIBRARY)
