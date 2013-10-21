@@ -16,10 +16,10 @@ do
         dirName=`basename $dir`               # armeabi
         mkdir -p $jarRoot"/"$dirName          # mkdir lib/armeabi
         
-        cpSrc=$dir"lib/*.so"
+        cpSrc=$dir"*.so"
         cpDst=$jarRoot"/"$dirName
         cp -r $cpSrc $cpDst                   # cp armeabi/lib lib/armeabi
         jarPath=$dirName".jar"     
-        zip -r -X $jarPath $jarRoot           # zip armeabi.jar lib/
+        zip -r $jarPath $jarRoot           # zip armeabi.jar lib/
         rm -r $jarRoot
 done
