@@ -168,16 +168,21 @@ void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_prepareAVFormatContext(JNIEn
 void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_writeAVPacketFromEncodedData(JNIEnv *env, jobject obj, jobject jData, jint jIsVideo, jint jOffset, jint jSize, jint jFlags, jlong jFrameCount){
     if(packet == NULL){
         packet = av_malloc(sizeof(AVPacket));
+        LOGI("av_malloc packet");
     }
 
-    av_init_packet(packet);
+    // jData is a ByteBuffer managed by Android's MediaCodec: a wrapper around the OMX interface
     uint8_t *data = (*env)->GetDirectBufferAddress(env, jData);
     LOGI("writeAVPacketFromEncodedData video: %d length %d", (int) jIsVideo, (int) jSize);
-    int avPacketFromDataResult = av_packet_from_data(packet, data, (int) jSize);
-    if(avPacketFromDataResult < 0){
-        LOGE("av_packet_from_data error: %s",stringForAVErrorNumber(avPacketFromDataResult));
-    }
 
+    av_init_packet(packet);
+
+    packet->size = (int) jSize;
+    packet->data = data;
+    packet->pts = (int) jFrameCount;
+    packet->dts = (int) jFrameCount;
+
+    // av_packet_from_data doesn't seem appropriate, as I don't want FFmpeg to manage data
 
     if( ((int) jIsVideo) == JNI_TRUE){
         LOGI("pre write_frame video");
@@ -187,8 +192,9 @@ void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_writeAVPacketFromEncodedData
         LOGI("pre write_frame audio");
         packet->stream_index = 1; // TODO
     }
-
+    LOGI("pre av_interleaved_write_frame");
     int writeFrameResult = av_interleaved_write_frame(outputFormatContext, packet);
+    // Crash here:
     // A/libc﹕ Fatal signal 8 (SIGFPE)
     if(writeFrameResult < 0){
         LOGE("av_interleaved_write_frame error: %s", stringForAVErrorNumber(writeFrameResult));
