@@ -3,7 +3,7 @@
 #set -x  # verbose
 
 # Compile .so from .c
-ndk-build
+ndk-build NDK_DEBUG=1
 
 # Generate .jar from .so
 cd ../libs
@@ -16,7 +16,7 @@ do
         dirName=`basename $dir`               # armeabi
         mkdir -p $jarRoot"/"$dirName          # mkdir lib/armeabi
         
-        cpSrc=$dir"*.so"
+        cpSrc=$dir"*"
         cpDst=$jarRoot"/"$dirName
         cp -r $cpSrc $cpDst                   # cp armeabi/lib lib/armeabi
         jarPath=$dirName".jar"     

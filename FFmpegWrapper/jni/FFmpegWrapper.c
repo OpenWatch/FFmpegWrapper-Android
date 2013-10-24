@@ -48,6 +48,7 @@ void copyAVFormatContext(AVFormatContext **dest, AVFormatContext **source){
     int numStreams = (*source)->nb_streams;
     LOGI("copyAVFormatContext source has %d streams", numStreams);
     LOGI("codec_id note: AAC : %d, H264 : %d", CODEC_ID_AAC, CODEC_ID_H264);
+    LOGI("sample_fmot note: S16: %d Float: %d", AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_FLT);
     int i;
     for (i = 0; i < numStreams; i++) {
         // Get input stream
@@ -60,7 +61,9 @@ void copyAVFormatContext(AVFormatContext **dest, AVFormatContext **source){
 
         // Copy input stream's codecContext for output stream's codecContext
         avcodec_copy_context(outputCodecContext, inputCodecContext);
-        LOGI("copyAVFormatContext Copying stream %d with codec_id %i", i, inputCodecContext->codec_id);
+
+        LOGI("copyAVFormatContext Copied stream %d with codec_id %i sample_fmt %s", i, inputCodecContext->codec_id, av_get_sample_fmt_name(inputCodecContext->sample_fmt));
+
     }
 }
 
@@ -137,45 +140,6 @@ int writeFileTrailer(AVFormatContext *avfc){
     return av_write_trailer(avfc);
 }
 
-// FFOuputStream
-/* Olde testing
-int prepareStream(AVCodec **codec, AVStream **stream, AVFormatContext *avfc, const char *codecName){
-    AVCodecContext *cc;
-
-    *codec = avcodec_find_encoder_by_name(codecName);
-    if(!(*codec)){ LOGE("find_encoder %s failed", codecName); }
-    *stream = avformat_new_stream(avfc, *codec);
-    if(!(*stream)){ LOGE("avformat_new_stream failed"); }
-
-    cc = (*stream)->codec;
-
-    // read codec params from file
-    avcodec_get_context_defaults3(cc, *codec);
-
-    // test manually providing codec params
-    if(codecName == videoCodecName){
-        LOGI("setting video cc params");
-        cc->codec_id = CODEC_ID_H264;
-        cc->bit_rate = 1000000;
-        cc->width = 640;
-        cc->height = 480;
-        cc->time_base.den = 30;
-        cc->time_base.num = 1;
-    }else if(codecName == audioCodecName){
-        LOGI("setting audio cc params");
-        cc->codec_id = CODEC_ID_AAC;
-        cc->sample_fmt  = AV_SAMPLE_FMT_S16;
-        cc->bit_rate    = 128000;
-        cc->sample_rate = 44100;
-        cc->channels    = 1;
-    }
-
-    if (avfc->oformat->flags & AVFMT_GLOBALHEADER)
-            cc->flags |= CODEC_FLAG_GLOBAL_HEADER;
-
-}
-*/
-
   /////////////////////
   //  JNI FUNCTIONS  //
   /////////////////////
@@ -199,10 +163,6 @@ void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_prepareAVFormatContext(JNIEn
     }
 
     writeFileHeader(outputFormatContext);
-
-    // will prepare streams by copying from inputFormatContext
-    //prepareStream(&audioCodec, &audioStream, outputFormatContext, audioCodecName);
-    //prepareStream(&videoCodec, &videoStream, outputFormatContext, videoCodecName);
 }
 
 void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_writeAVPacketFromEncodedData(JNIEnv *env, jobject obj, jobject jData, jint jIsVideo, jint jOffset, jint jSize, jint jFlags, jlong jFrameCount){
@@ -218,35 +178,22 @@ void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_writeAVPacketFromEncodedData
         LOGE("av_packet_from_data error: %s",stringForAVErrorNumber(avPacketFromDataResult));
     }
 
-    /*
-    packet->data = data;
-    packet->size = (int) jSize;
-    packet->pts = (int64_t) ((long) jFrameCount);
-    packet->dts = (int64_t) ((long) jFrameCount);
-
-    // unknown params:
-    packet->duration = 0;
-    packet->pos = -1;
-    */
 
     if( ((int) jIsVideo) == JNI_TRUE){
         LOGI("pre write_frame video");
         packet->stream_index = 0; // TODO
-        // Apply bitstream filter
+        // TODO: Apply bitstream filter
     }else{
         LOGI("pre write_frame audio");
         packet->stream_index = 1; // TODO
     }
 
     int writeFrameResult = av_interleaved_write_frame(outputFormatContext, packet);
+    // A/libc﹕ Fatal signal 8 (SIGFPE)
     if(writeFrameResult < 0){
         LOGE("av_interleaved_write_frame error: %s", stringForAVErrorNumber(writeFrameResult));
     }
     LOGI("post write_frame");
-    // Create AVPacket from encoded data
-    // apply bitstream filter
-    // av_rescale_q
-    // Write packet to AVFormatContext (av_interleaved_write_frame)
 }
 
 void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_finalizeAVFormatContext(JNIEnv *env, jobject obj){
