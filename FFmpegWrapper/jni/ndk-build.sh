@@ -18,7 +18,7 @@ do
         
         cpSrc=$dir"*"
         cpDst=$jarRoot"/"$dirName
-        cp -r $cpSrc $cpDst                   # cp armeabi/lib lib/armeabi
+        cp -r $cpSrc $cpDst                # cp armeabi/lib lib/armeabi
         jarPath=$dirName".jar"     
         zip -r $jarPath $jarRoot           # zip armeabi.jar lib/
         rm -r $jarRoot
