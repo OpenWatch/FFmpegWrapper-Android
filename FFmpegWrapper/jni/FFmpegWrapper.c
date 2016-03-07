@@ -408,7 +408,7 @@ void Java_net_openwatch_ffmpegwrapper_FFmpegWrapper_writeAVPacketFromEncodedData
 
     packet->size = (int) jSize;
     packet->data = data;
-    packet->pts = (int) jPts;
+    packet->pts = (int64_) jPts;
 
 	packet->pts = av_rescale_q(packet->pts, *videoSourceTimeBase, (outputFormatContext->streams[packet->stream_index]->time_base));
 
